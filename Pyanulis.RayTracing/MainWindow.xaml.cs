@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Pyanulis.RayTracing.Model;
+using Pyanulis.RayTracing.Model.Materials;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,35 +26,113 @@ namespace Pyanulis.RayTracing
     public partial class MainWindow : Window
     {
         // Image
-        private const double c_aspectRatio = 16.0 / 9.0;
-        private const int c_imgWidth = 800;
+        private const double c_aspectRatio = 3.0 / 2.0;
+        private const int c_imgWidth = 100;
         private const int c_imgHeight = (int)(c_imgWidth / c_aspectRatio);
         private const int c_dpi = 96;
 
-        // Camera viewport (screen)
-        private const double c_viewportHeight = 2.0;
-        private const double c_viewportWidth = c_aspectRatio * c_viewportHeight;
-        private const double c_focalLength = 1.0;
+        private const int c_samplePerPixel = 30;
+        private const int c_rayColorDepth = 10;
 
-        // Z-axis is directed to viewer - scene is -z
-        // m_horizontal and m_vertical - are kind of basis, but with length set to the viewport's size
-        private readonly Vec3 m_origin = new Vec3(0, 0, 0);
-        private readonly Vec3 m_horizontal = new Vec3(c_viewportWidth, 0, 0);
-        private readonly Vec3 m_vertical = new Vec3(0, c_viewportHeight, 0);
-        private readonly Vec3 m_lowerLeftCorner;
+        private readonly ObstacleSet m_world = new ObstacleSet();
+        private readonly Camera m_camera;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Z-axis is directed to viewer - scene is -z
-            m_lowerLeftCorner = m_origin - m_horizontal / 2 - m_vertical / 2 - new Vec3(0, 0, c_focalLength);
-
             image.Height = c_imgHeight;
             image.Width = c_imgWidth;
 
+            //Material material_ground = new Lambertian(new RayColor(0.8, 0.8, 0.0));
+            ////Material material_center = new Lambertian(new RayColor(0.7, 0.3, 0.3));
+            ////Material material_left = new Metal(new RayColor(0.8, 0.8, 0.8));
+            //Material material_center = new Lambertian(new RayColor(0.1, 0.2, 0.5));
+            //Material material_left = new Dielectric(1.5);
+            //Material material_right = new Metal(new RayColor(0.8, 0.6, 0.2), 0.3);
+
+            //m_world.Add(new Sphere(new Vec3(0.0, -100.5, -1.0), 100.0, material_ground));
+            //m_world.Add(new Sphere(new Vec3(0.0, 0.0, -1.0), 0.5, material_center));
+            //m_world.Add(new Sphere(new Vec3(-1.0, 0.0, -1.0), 0.5, material_left));
+            //m_world.Add(new Sphere(new Vec3(-1.0, 0.0, -1.0), -0.4, material_left));
+            //m_world.Add(new Sphere(new Vec3(1.0, 0.0, -1.0), 0.5, material_right));
+
+            double R = Math.Cos(Math.PI / 4);
+
+            //Material material_left = new Lambertian(new RayColor(0, 0, 1));
+            //Material material_right = new Lambertian(new RayColor(1, 0, 0));
+
+            //m_world.Add(new Sphere(new Vec3(-R, 0, -1), R, material_left));
+            //m_world.Add(new Sphere(new Vec3(R, 0, -1), R, material_right));
+
+            m_world = CreateWorld();
+
+            m_camera = new Camera(
+                lookfrom: new Vec3(13, 2, 3),
+                lookat: new Vec3(0, 0, 0),
+                vup: new Vec3(0, 1, 0),
+                vfov: 20, 
+                aspectRatio: c_aspectRatio, 
+                aperture: 0.1,
+                focus_dist: 10.0);
+
             RayColor[,] rayColors = Generate();
             image.Source = CreateImage(rayColors);
+        }
+
+        private ObstacleSet CreateWorld()
+        {
+            ObstacleSet world = new ObstacleSet();
+
+            Material ground_material = new Lambertian(new RayColor(0.5, 0.5, 0.5));
+            world.Add(new Sphere(new Vec3(0, -1000, 0), 1000, ground_material));
+
+            for (int a = -11; a < 11; a++)
+            {
+                for (int b = -11; b < 11; b++)
+                {
+                    double choose_mat = Vec3.RandomDouble();
+                    Vec3 center = new Vec3(a + 0.9 * Vec3.RandomDouble(), 0.2, b + 0.9 * Vec3.RandomDouble());
+
+                    if ((center - new Vec3(4, 0.2, 0)).Length > 0.9)
+                    {
+                        Material sphere_material;
+
+                        if (choose_mat < 0.8)
+                        {
+                            // diffuse
+                            RayColor albedo = new RayColor(Vec3.Random() * Vec3.Random());
+                            sphere_material = new Lambertian(albedo);
+                            world.Add(new Sphere(center, 0.2, sphere_material));
+                        }
+                        else if (choose_mat < 0.95)
+                        {
+                            // metal
+                            RayColor albedo = new RayColor(Vec3.Random(0.5, 1));
+                            double fuzz = Vec3.RandomDouble(0, 0.5);
+                            sphere_material = new Metal(albedo, fuzz);
+                            world.Add(new Sphere(center, 0.2, sphere_material));
+                        }
+                        else
+                        {
+                            // glass
+                            sphere_material = new Dielectric(1.5);
+                            world.Add(new Sphere(center, 0.2, sphere_material));
+                        }
+                    }
+                }
+            }
+
+            Material material1 = new Dielectric(1.5);
+            world.Add(new Sphere(new Vec3(0, 1, 0), 1.0, material1));
+
+            Material material2 = new Lambertian(new RayColor(0.4, 0.2, 0.1));
+            world.Add(new Sphere(new Vec3(-4, 1, 0), 1.0, material2));
+
+            Material material3 = new Metal(new RayColor(0.7, 0.6, 0.5), 0.0);
+            world.Add(new Sphere(new Vec3(4, 1, 0), 1.0, material3));
+
+            return world;
         }
 
         // O,d,t - from ray definition
@@ -85,19 +165,31 @@ namespace Pyanulis.RayTracing
             }
         }
 
-        private RayColor RayColor(Ray ray)
+        private RayColor RayColor(Ray ray, ObstacleSet world, int depth)
         {
-            double t = HitSphere(new Vec3(0, 0, -1), 0.5, ray);
-            if (t > 0.0)
+            if (depth <= 0)
             {
-                Vec3 N = Vec3.Normalize(ray.At(t) - new Vec3(0, 0, -1));
-                return new RayColor(N + 1) * 0.5;
+                return new RayColor(0, 0, 0);
+            }
+
+            HitRecord record = null;
+            if (world.Hit(ray, double.Epsilon, double.MaxValue, ref record))
+            {
+                Ray scattered = null;
+                RayColor attenuation = null;
+                if (record.Material.Scatter(ray, record, ref attenuation, ref scattered))
+                {
+                    return RayColor(scattered, world, depth - 1) * attenuation;
+                }
+                return new RayColor(0, 0, 0);
+
+                //return new RayColor(0.5 * (record.Normal + new RayColor(1, 1, 1)));
             }
 
             Vec3 unitDirection = ray.Direction.Normalize();
             // blending color:
             // blendedValue = (1 − t) * startValue + t * endValue
-            t = 0.5 * (unitDirection.Y + 1.0);
+            double t = 0.5 * (unitDirection.Y + 1.0);
             return new RayColor((1.0 - t) * new Vec3(1.0, 1.0, 1.0) + t * new Vec3(0.5, 0.7, 1.0));
         }
 
@@ -105,17 +197,24 @@ namespace Pyanulis.RayTracing
         {
             RayColor[,] rayColors = new RayColor[c_imgHeight,c_imgWidth];
 
-            for (int j = c_imgHeight-1; j >=0; --j)
+            Random random = new Random();
+            for (int j = c_imgHeight - 1; j >= 0; --j)
             {
                 for (int i = 0; i < c_imgWidth; ++i)
                 {
-                    // x and y are normalized to be <=1 and become a coefficient of a basis vector
-                    double x = (i * 1.0) / (c_imgWidth - 1);
-                    double y = (j * 1.0) / (c_imgHeight - 1);
+                    RayColor pixelColor = new RayColor(0, 0, 0, c_samplePerPixel);
+                    for (int s = 0; s < c_samplePerPixel; ++s)
+                    {
+                        // x and y are normalized to be <=1 and become a coefficient of a basis vector
+                        double x = ((i * 1.0) + random.NextDouble()) / (c_imgWidth - 1);
+                        double y = ((j * 1.0) + random.NextDouble()) / (c_imgHeight - 1);
+                        Ray r = m_camera.GetRay(x, y);
+                        pixelColor += RayColor(r, m_world, c_rayColorDepth);
+                    }
 
-                    Ray r = new Ray(m_origin, m_lowerLeftCorner + x * m_horizontal + y * m_vertical - m_origin);
-                    RayColor pixelColor = RayColor(r);
-                    rayColors[j,i] = pixelColor;
+                    // need to invert j since image starts at the bottom
+                    int jInverted = c_imgHeight - 1 - j;
+                    rayColors[jInverted, i] = pixelColor;
                 }
             }
 
@@ -147,10 +246,15 @@ namespace Pyanulis.RayTracing
 
 
             BitmapSource bitmap = BitmapSource.Create(width, height,
-                96, 96, pixelFormat, null,
+                c_dpi, c_dpi, pixelFormat, null,
                 rawImage, rawStride);
 
             return bitmap;
+        }
+
+        private static double RandomDouble(double min, double max)
+        {
+            return min + (max - min) * (new Random()).NextDouble();
         }
 
         private void BtnGenerateClick(object sender, RoutedEventArgs e)
