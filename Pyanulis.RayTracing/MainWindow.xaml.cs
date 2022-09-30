@@ -27,7 +27,7 @@ namespace Pyanulis.RayTracing
     {
         // Image
         private const double c_aspectRatio = 3.0 / 2.0;
-        private const int c_imgWidth = 100;
+        private const int c_imgWidth = 300;
         private const int c_imgHeight = (int)(c_imgWidth / c_aspectRatio);
         private const int c_dpi = 96;
 
@@ -76,7 +76,7 @@ namespace Pyanulis.RayTracing
                 aperture: 0.1,
                 focus_dist: 10.0);
 
-            RayColor[,] rayColors = Generate();
+            RayColor[,] rayColors = GenerateAsync();
             image.Source = CreateImage(rayColors);
         }
 
@@ -219,6 +219,62 @@ namespace Pyanulis.RayTracing
             }
 
             return rayColors;
+        }
+
+        RayColor[,] rayColorsAsync = new RayColor[c_imgHeight, c_imgWidth];
+        private object m_sync = new object();
+        private RayColor[,] GenerateAsync()
+        {
+            const int threadCount = 8;
+            RayColor[,] rayColors = new RayColor[c_imgHeight, c_imgWidth];
+            int range = c_imgHeight / threadCount;
+            int jMin = 0;
+            List<Task> tasks = new List<Task>();
+            for (int i = 0; i < threadCount; ++i)
+            {
+                int jMax = i == threadCount - 1 ? c_imgHeight - 1 : jMin + range - 1;
+                int min = jMin;
+                Task task = new Task(() => { Generate(min, jMax, rayColors); });
+                Task t = task;
+                tasks.Add(task);
+                jMin += range;
+            }
+
+            foreach (var task in tasks)
+            {
+                task.Start();
+            }
+            Task.WaitAll(tasks.ToArray());
+
+            return rayColorsAsync;
+        }
+
+        private void Generate(int jMin, int jMax, RayColor[,] rayColors)
+        {
+            Random random = new Random();
+            for (int j = jMin; j <= jMax; ++j)
+            {
+                for (int i = 0; i < c_imgWidth; ++i)
+                {
+                    RayColor pixelColor = new RayColor(0, 0, 0, c_samplePerPixel);
+                    for (int s = 0; s < c_samplePerPixel; ++s)
+                    {
+                        // x and y are normalized to be <=1 and become a coefficient of a basis vector
+                        double x = ((i * 1.0) + random.NextDouble()) / (c_imgWidth - 1);
+                        double y = ((j * 1.0) + random.NextDouble()) / (c_imgHeight - 1);
+                        Ray r = m_camera.GetRay(x, y);
+                        pixelColor += RayColor(r, m_world, c_rayColorDepth);
+                    }
+
+                    // need to invert j since image starts at the bottom
+                    int jInverted = c_imgHeight - 1 - j;
+
+                    //lock (m_sync)
+                    {
+                        rayColorsAsync[jInverted, i] = pixelColor;
+                    }
+                }
+            }
         }
 
         private BitmapSource CreateImage(RayColor[,] colorList)
