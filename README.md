@@ -6,5 +6,5 @@ Based on this article:
 
 ![image](https://user-images.githubusercontent.com/16039308/193480864-d3b74afc-ff66-4052-a6a9-945aa7fa3f24.png)
 
-![image](https://user-images.githubusercontent.com/16039308/193480871-2147354f-0458-4ff3-b82c-f0b3ea51c3d5.png)
+![image](https://user-images.githubusercontent.com/16039308/193480933-db7f8df2-a77f-4ed7-af89-af6e9b8fd678.png)
 
