@@ -3,15 +3,34 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:view="clr-namespace:Pyanulis.RayTracing.View"
         xmlns:local="clr-namespace:Pyanulis.RayTracing"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="1200">
+        Title="MainWindow" Height="700" Width="1200"
+        FontFamily="SegoeUI"
+        FontSize="14px">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
+        <view:SceneViewControl 
+            x:Name="m_view" 
+            x:FieldModifier="private" 
+            Grid.Row="0" 
+            Grid.Column="0" 
+            HorizontalAlignment="Left"/>
         <Image x:Name="image" Grid.Row="0" HorizontalAlignment="Left" Height="100"  Margin="111,90,0,0" VerticalAlignment="Top" Width="100"/>
-        <Button x:Name="btnGenerate" Content="Generate" Width="120" Height="35" Grid.Row="1" HorizontalAlignment="Left" Margin="4,33,0,32" Click="BtnGenerateClick"/>
+        <view:ToolbarViewControl 
+            x:Name="toolbar"
+            Grid.Column="1" 
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            HorizontalAlignment="Stretch" 
+            VerticalAlignment="Stretch"/>
     </Grid>
 </Window>

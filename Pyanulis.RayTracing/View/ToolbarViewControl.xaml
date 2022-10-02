@@ -1,0 +1,89 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Pyanulis.RayTracing.View"
+             xmlns:Controls="clr-namespace:Pyanulis.RayTracing.Controls" x:Class="Pyanulis.RayTracing.View.ToolbarViewControl"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="200">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="120"/>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid
+            x:Name="gridSettings"
+            Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Label
+                Grid.Row="0"
+                Grid.Column="0"
+                >Image height:</Label>
+            <Label
+                Grid.Row="1"
+                Grid.Column="0"
+                >Samples rate:</Label>
+            <Label
+                Grid.Row="2"
+                Grid.Column="0"
+                >Color depth:</Label>
+            <TextBox 
+                x:Name="txtImgHeight"
+                Grid.Row="0"
+                Grid.Column="1"
+                Margin="4"
+                PreviewTextInput="TxtPreviewText"
+                Text="{Binding Path=ImageHeight}"/>
+            <TextBox 
+                x:Name="txtSampleRate"
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="4" 
+                PreviewTextInput="TxtPreviewText"
+                Text="{Binding Path=SamplesRate}"/>
+            <TextBox 
+                x:Name="txtColorDepth"
+                Grid.Row="2"
+                Grid.Column="1"
+                Margin="4"
+                PreviewTextInput="TxtPreviewText"
+                Text="{Binding Path=ColorDepth}"/>
+        </Grid>
+        <WrapPanel 
+            x:Name="pnlWrap"
+            Orientation="Horizontal"
+            Grid.Row="1">
+            <Button 
+            x:Name="btnGenerate"
+            Margin="4, 4, 4, 0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Width="75"
+            Height="35" Click="btnGenerate_Click">Generate</Button>
+            <Button 
+            x:Name="btnCancel"
+            Margin="4, 4, 4, 0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Width="75"
+            Height="35"
+                Visibility="Hidden"
+                Click="btnCancel_Click">Cancel</Button>
+        </WrapPanel>
+        <StackPanel 
+            x:Name="pnlStack"
+            Grid.Row="2">
+            
+        </StackPanel>
+    </Grid>
+</UserControl>

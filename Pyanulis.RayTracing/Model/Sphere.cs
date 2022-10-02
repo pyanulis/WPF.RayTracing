@@ -1,9 +1,5 @@
 ﻿using Pyanulis.RayTracing.Model.Materials;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pyanulis.RayTracing.Model
 {
@@ -20,6 +16,19 @@ namespace Pyanulis.RayTracing.Model
             m_material = material;
         }
 
+        // O,d,t - from ray definition
+        // a,b,c - quadratic equation parameters
+        // C - sphere's center, r - radius
+        //
+        // Intersection of a ray with a sphere is found by resolving this:
+        // (d*d)t^2+(2d*(O−C))*t+(O−C)*(O−C)−r^2=0
+        // a = b*b (ray vector scalar)
+        // b = 2d*(O−C)
+        // c = (O−C)*(O−C)−r^2
+        //
+        // Two roots - ray goes through the sphere
+        // One root - ray touches it
+        // Zero roots - no intersection
         public override bool Hit(Ray r, double tMin, double tMax, ref HitRecord hitRecord)
         {
             Vec3 oc = r.Origin - m_center;

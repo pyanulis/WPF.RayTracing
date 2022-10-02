@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Pyanulis.RayTracing
+namespace Pyanulis.RayTracing.Model
 {
     internal class RayColor : Vec3
     {
         private int m_samples = 1;
+
+        public RayColor() : base(0, 0, 0)
+        {
+        }
 
         public RayColor(double x, double y, double z) : base(x, y, z)
         {
