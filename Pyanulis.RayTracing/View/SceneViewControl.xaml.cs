@@ -1,5 +1,6 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace Pyanulis.RayTracing.View
 {
@@ -13,11 +14,18 @@ namespace Pyanulis.RayTracing.View
             InitializeComponent();
         }
 
+        public Dispatcher ContextDispatcher => Dispatcher;
+
         public void ApplyImage(BitmapSource bitmap)
         {
             image.Height = bitmap.Height;
             image.Width = bitmap.Width;
             image.Source = bitmap;
+        }
+
+        public void GenerationStarted()
+        {
+            image.Source = null;
         }
     }
 }

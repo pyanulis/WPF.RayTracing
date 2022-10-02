@@ -65,12 +65,14 @@ namespace Pyanulis.RayTracing.View
 
         public void GenerationStarted()
         {
+            gridSettings.IsEnabled = false;
             btnGenerate.Visibility = Visibility.Collapsed;
             btnCancel.Visibility = Visibility.Visible;
         }
 
         public void GenerationCompleted()
         {
+            gridSettings.IsEnabled = true;
             btnCancel.Visibility = Visibility.Collapsed;
             btnGenerate.Visibility = Visibility.Visible;
             Clear();

@@ -9,7 +9,7 @@
              d:DesignHeight="450" d:DesignWidth="200">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="120"/>
+            <RowDefinition Height="200"/>
             <RowDefinition Height="80"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -17,6 +17,8 @@
             x:Name="gridSettings"
             Grid.Row="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
@@ -28,36 +30,66 @@
             <Label
                 Grid.Row="0"
                 Grid.Column="0"
+                VerticalContentAlignment="Center"
                 >Image height:</Label>
             <Label
                 Grid.Row="1"
                 Grid.Column="0"
+                VerticalContentAlignment="Center"
                 >Samples rate:</Label>
             <Label
                 Grid.Row="2"
                 Grid.Column="0"
+                VerticalContentAlignment="Center"
                 >Color depth:</Label>
+            <Label
+                Grid.Row="3"
+                Grid.Column="0"
+                VerticalContentAlignment="Center"
+                >Threads:</Label>
             <TextBox 
                 x:Name="txtImgHeight"
                 Grid.Row="0"
                 Grid.Column="1"
                 Margin="4"
                 PreviewTextInput="TxtPreviewText"
-                Text="{Binding Path=ImageHeight}"/>
+                Text="{Binding Path=ImageHeight}"
+                VerticalContentAlignment="Center"/>
             <TextBox 
                 x:Name="txtSampleRate"
                 Grid.Row="1"
                 Grid.Column="1"
                 Margin="4" 
                 PreviewTextInput="TxtPreviewText"
-                Text="{Binding Path=SamplesRate}"/>
+                Text="{Binding Path=SamplesRate}"
+                VerticalContentAlignment="Center"/>
             <TextBox 
                 x:Name="txtColorDepth"
                 Grid.Row="2"
                 Grid.Column="1"
                 Margin="4"
                 PreviewTextInput="TxtPreviewText"
-                Text="{Binding Path=ColorDepth}"/>
+                Text="{Binding Path=ColorDepth}"
+                VerticalContentAlignment="Center"/>
+            <TextBox 
+                x:Name="txtThreads"
+                Grid.Row="3"
+                Grid.Column="1"
+                Margin="4"
+                PreviewTextInput="TxtPreviewText"
+                Text="{Binding Path=ThreadCount}"
+                VerticalContentAlignment="Center"/>
+            <CheckBox 
+                x:Name="chbLive"
+                Grid.Row="4"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Margin="4"
+                PreviewTextInput="TxtPreviewText"
+                IsThreeState="False"
+                IsChecked="{Binding Path=IsLive}"
+                Content="Live"
+                VerticalContentAlignment="Center"/>
         </Grid>
         <WrapPanel 
             x:Name="pnlWrap"

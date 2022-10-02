@@ -4,6 +4,8 @@ namespace Pyanulis.RayTracing.Model
 {
     internal class Camera
     {
+        #region Private fields
+        
         private const double c_focalLength = 1.0;
 
         // Camera viewport (screen)
@@ -19,6 +21,10 @@ namespace Pyanulis.RayTracing.Model
         private readonly Vec3 m_lowerLeftCorner;
         private readonly Vec3 u, v, w;
         private readonly double m_lensRadius;
+
+        #endregion
+
+        #region Constructor
 
         public Camera(
             Vec3 lookfrom,
@@ -48,6 +54,9 @@ namespace Pyanulis.RayTracing.Model
             m_lensRadius = aperture / 2;
         }
 
+        #endregion
+
+        #region Public methods
         public Ray GetRay(double s, double t)
         {
             Vec3 rd = m_lensRadius * Vec3.RandomInUnitDisk();
@@ -58,10 +67,13 @@ namespace Pyanulis.RayTracing.Model
                 m_lowerLeftCorner + s * m_horizontal + t * m_vertical - m_origin - offset
             );
         }
+        #endregion
 
+        #region Private methods
         private static double DegreesToRadians(double degrees)
         {
             return degrees * Math.PI / 180.0;
-        }
+        } 
+        #endregion
     }
 }

@@ -1,14 +1,24 @@
 ﻿using Pyanulis.RayTracing.Model;
 using Pyanulis.RayTracing.View;
+using System;
+using System.ComponentModel;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace Pyanulis.RayTracing.ViewModel
 {
-    internal class RayViewModel : IViewModel
+    internal class RayViewModel : IViewModel, INotifyPropertyChanged
     {
+        #region Constants and private fields
+        
         private const int c_dpi = 96;
+
         private BitmapSource m_bitmap;
+        private string m_lastDuration;
+
+        #endregion
+
+        #region Public properties
 
         internal IModel Model { get; }
         internal ISceneView Scene { get; }
@@ -29,7 +39,32 @@ namespace Pyanulis.RayTracing.ViewModel
             get => Model.ImageHeight;
             set => Model.ImageHeight = value;
         }
+        public int ThreadCount
+        {
+            get => Model.ThreadCount;
+            set => Model.ThreadCount = value;
+        }
+        public bool IsLive
+        {
+            get => Model.IsLive;
+            set => Model.IsLive = value;
+        }
+        public string LastDuration
+        {
+            get => m_lastDuration;
+            set
+            {
+                m_lastDuration = value;
+                OnPropertyChanged(nameof(LastDuration));
+            }
+        }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
+
+        #region Constructor
+        
         public RayViewModel(IModel model, ISceneView scene, IToolbarView toolbar)
         {
             Model = model;
@@ -38,6 +73,10 @@ namespace Pyanulis.RayTracing.ViewModel
 
             Model.ViewModel = this;
         }
+
+        #endregion
+
+        #region Public methods
 
         public void Cancel()
         {
@@ -48,10 +87,13 @@ namespace Pyanulis.RayTracing.ViewModel
         {
             Model.GenerateAsync();
             Toolbar.GenerationStarted();
+            Scene.GenerationStarted();
         }
 
         public void GenerationCompleted()
         {
+            LastDuration = $"Last duration: {Model.LastDuration}";
+
             Toolbar.GenerationCompleted();
             Scene.ApplyImage(CreateImage(Model.ColorMap));
         }
@@ -65,6 +107,19 @@ namespace Pyanulis.RayTracing.ViewModel
         {
             Toolbar.SetProgress(key, value);
         }
+
+        public void StepCompleted()
+        {
+            Scene.ContextDispatcher.Invoke(() =>
+            {
+                CreateImage(Model.ColorMap);
+                Scene.ApplyImage(CreateImage(Model.ColorMap));
+            });
+        }
+
+        #endregion
+
+        #region Private methods
 
         private BitmapSource CreateImage(RayColor[,] colorList)
         {
@@ -97,5 +152,16 @@ namespace Pyanulis.RayTracing.ViewModel
 
             return m_bitmap;
         }
+
+        private void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
+        } 
+
+        #endregion
     }
 }
