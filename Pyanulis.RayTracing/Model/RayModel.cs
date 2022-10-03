@@ -21,8 +21,7 @@ namespace Pyanulis.RayTracing.Model
 
         private readonly ObstacleSet m_world = new ObstacleSet();
         private readonly Camera m_camera;
-
-        private readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
+        private CancellationTokenSource m_tokenSource = new CancellationTokenSource();
 
         private int m_imgWidth;
         private int m_imgHeight = 200;
@@ -115,6 +114,7 @@ namespace Pyanulis.RayTracing.Model
             int jMin = 0;
             List<Task> tasks = new List<Task>();
 
+            m_tokenSource = new CancellationTokenSource();
             AutoResetEvent[] events = new AutoResetEvent[m_threadCount];
 
             Stopwatch stopwatch = new Stopwatch();
@@ -148,19 +148,29 @@ namespace Pyanulis.RayTracing.Model
             CancellationTokenSource watcherSource = new CancellationTokenSource();
             if (IsLive)
             {
-                Task.Run(() =>
-                {
-                    while (!watcherSource.IsCancellationRequested)
+                Task watcher = new Task(() => {
+                    while (true)
                     {
-                        WaitHandle.WaitAny(events);
-
-                        ViewModel.StepCompleted();
+                        watcherSource.Token.ThrowIfCancellationRequested();
+                        if (WaitHandle.WaitAny(events, 100) > -1)
+                        {
+                            ViewModel.StepCompleted();
+                        }
                     }
                 },
                 watcherSource.Token);
+
+                watcher.Start();
             }
 
-            await Task.WhenAll(tasks);
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                m_tokenSource.Dispose();
+            }
             watcherSource.Cancel();
 
             stopwatch.Stop();
@@ -195,17 +205,15 @@ namespace Pyanulis.RayTracing.Model
             double total = vert.Count;
 
             int step = 1;
-            foreach (int j in vert.OrderBy(x => random.Next()).OrderBy(y => random.Next()).ToArray())
+            foreach (int j in vert.OrderBy(x => random.Next()))
             {
-                foreach (int i in hor.OrderBy(x => random.Next()).OrderBy(y => random.Next()).ToArray())
+                foreach (int i in hor.OrderBy(x => random.Next()))
                 {
                     RayColor pixelColor = new RayColor(0, 0, 0, SamplesRate);
                     for (int s = 0; s < SamplesRate; ++s)
                     {
-                        if (m_tokenSource.IsCancellationRequested)
-                        {
-                            return;
-                        }
+                        m_tokenSource.Token.ThrowIfCancellationRequested();
+
                         // x and y are normalized to be <=1 and become a coefficient of a basis vector
                         double x = ((i * 1.0) + random.NextDouble()) / (m_imgWidth - 1);
                         double y = ((j * 1.0) + random.NextDouble()) / (ImageHeight - 1);
