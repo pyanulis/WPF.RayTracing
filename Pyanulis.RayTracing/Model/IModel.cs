@@ -6,6 +6,7 @@ namespace Pyanulis.RayTracing.Model
     internal interface IModel
     {
         void GenerateAsync();
+        void GenerateWithShuffleAsync();
         void Cancel();
         RayColor[,] ColorMap { get; }
         IViewModel ViewModel { get; set; }

@@ -1,11 +1,6 @@
 ﻿using Pyanulis.RayTracing.Model;
-using Pyanulis.RayTracing.Model.Materials;
 using Pyanulis.RayTracing.ViewModel;
-using System;
-using System.Threading;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 /// <summary>
 /// https://raytracing.github.io/books/RayTracingInOneWeekend.html

@@ -59,7 +59,7 @@ namespace Pyanulis.RayTracing.ViewModel
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion
 
@@ -85,7 +85,8 @@ namespace Pyanulis.RayTracing.ViewModel
 
         public void Generate()
         {
-            Model.GenerateAsync();
+            Model.GenerateWithShuffleAsync();
+            //Model.GenerateAsync();
             Toolbar.GenerationStarted();
             Scene.GenerationStarted();
         }
@@ -112,7 +113,6 @@ namespace Pyanulis.RayTracing.ViewModel
         {
             Scene.ContextDispatcher.Invoke(() =>
             {
-                CreateImage(Model.ColorMap);
                 Scene.ApplyImage(CreateImage(Model.ColorMap));
             });
         }
@@ -155,7 +155,7 @@ namespace Pyanulis.RayTracing.ViewModel
 
         private void OnPropertyChanged(string name)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
+            PropertyChangedEventHandler? handler = PropertyChanged;
             if (handler != null)
             {
                 handler(this, new PropertyChangedEventArgs(name));

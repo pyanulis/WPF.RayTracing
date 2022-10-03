@@ -19,9 +19,9 @@ namespace Pyanulis.RayTracing.Model
 
         #region Private fields
 
-        private readonly ObstacleSet m_world = new ObstacleSet();
+        private readonly ObstacleSet m_world = new();
         private readonly Camera m_camera;
-        private CancellationTokenSource m_tokenSource = new CancellationTokenSource();
+        private CancellationTokenSource m_tokenSource = new();
 
         private int m_imgWidth;
         private int m_imgHeight = 200;
@@ -56,39 +56,12 @@ namespace Pyanulis.RayTracing.Model
         #endregion
 
         #region Constructor
-        
+
         public RayModel()
         {
             InitMap();
 
-            Material material_ground = new Lambertian(new RayColor(0.8, 0.8, 0.0));
-            //Material material_center = new Lambertian(new RayColor(0.7, 0.3, 0.3));
-            //Material material_left = new Metal(new RayColor(0.8, 0.8, 0.8));
-            Material material_center = new Lambertian(new RayColor(0.1, 0.2, 0.5));
-            Material material_left = new Dielectric(1.5);
-            Material material_right = new Metal(new RayColor(0.8, 0.6, 0.2), 0.3);
-            Material material_metal = new Metal(new RayColor(0.8, 0.9, 0.4), 0.6);
-            Material material_lambert = new Lambertian(new RayColor(0.7, 0.8, 0.5));
-            Material material_diel = new Dielectric(2.5);
-
-            //m_world.Add(new Sphere(new Vec3(0.0, -100.5, -1.0), 100.0, material_ground));
-            m_world.Add(new Sphere(new Vec3(0.0, 0.0, -1.0), 0.5, material_center));
-            m_world.Add(new Sphere(new Vec3(-1.0, 0.0, -1.0), 0.5, material_left));
-            m_world.Add(new Sphere(new Vec3(1.0, 0.0, -1.0), 0.5, material_right));
-
-            m_world.Add(new Sphere(new Vec3(-1.0, 1.0, -1.0), 0.5, material_metal));
-            m_world.Add(new Sphere(new Vec3(1.0, 1.0, -1.0), 0.5, material_lambert));
-            m_world.Add(new Sphere(new Vec3(0.0, 0.7, -0.5), 0.5, material_diel));
-
-            double R = Math.Cos(Math.PI / 4);
-
-            //Material material_left = new Lambertian(new RayColor(0, 0, 1));
-            //Material material_right = new Lambertian(new RayColor(1, 0, 0));
-
-            //m_world.Add(new Sphere(new Vec3(-R, 0, -1), R, material_left));
-            //m_world.Add(new Sphere(new Vec3(R, 0, -1), R, material_right));
-
-            //m_world = CreateWorld();
+            m_world = WorldContainer.SimpleThree;
 
             m_camera = new Camera(
                 lookfrom: new Vec3(0, 4, 7),
@@ -103,7 +76,7 @@ namespace Pyanulis.RayTracing.Model
         #endregion
 
         #region Public methods
-        
+
         public async void GenerateAsync()
         {
             int m_threadCount = ThreadCount;
@@ -112,12 +85,12 @@ namespace Pyanulis.RayTracing.Model
 
             int range = ImageHeight / m_threadCount;
             int jMin = 0;
-            List<Task> tasks = new List<Task>();
+            List<Task> tasks = new();
 
             m_tokenSource = new CancellationTokenSource();
             AutoResetEvent[] events = new AutoResetEvent[m_threadCount];
 
-            Stopwatch stopwatch = new Stopwatch();
+            Stopwatch stopwatch = new();
             stopwatch.Start();
             for (int i = 0; i < m_threadCount; ++i)
             {
@@ -125,19 +98,11 @@ namespace Pyanulis.RayTracing.Model
                 int min = jMin;
                 int key = i + 1;
 
-                Progress<double> progress = new Progress<double>(p => ViewModel.SetProgress(key, p));
-                AutoResetEvent autoEvent = new AutoResetEvent(false);
+                Progress<double> progress = new(p => ViewModel.SetProgress(key, p));
+                AutoResetEvent autoEvent = new(false);
                 events[i] = autoEvent;
 
-                Task task = new Task(() =>
-                {
-                    Generate(
-                        min,
-                        jMax,
-                        progress,
-                        autoEvent);
-                },
-                m_tokenSource.Token);
+                Task task = new(() => { Generate(min, jMax, progress, autoEvent); }, m_tokenSource.Token);
 
                 tasks.Add(task);
                 task.Start();
@@ -145,13 +110,88 @@ namespace Pyanulis.RayTracing.Model
                 ViewModel.AddThreadProgress(key);
             }
 
-            CancellationTokenSource watcherSource = new CancellationTokenSource();
+            CancellationTokenSource watcherSource = new();
             if (IsLive)
             {
-                Task watcher = new Task(() => {
+                Task watcher = new(() =>
+                {
                     while (true)
                     {
                         watcherSource.Token.ThrowIfCancellationRequested();
+
+                        if (WaitHandle.WaitAny(events, 100) > -1)
+                        {
+                            ViewModel.StepCompleted();
+                        }
+                    }
+                },
+                watcherSource.Token);
+
+                watcher.Start();
+            }
+
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                m_tokenSource.Dispose();
+            }
+            watcherSource.Cancel();
+
+            stopwatch.Stop();
+            LastDuration = stopwatch.Elapsed.Duration();
+            ViewModel.GenerationCompleted();
+        }
+
+        public async void GenerateWithShuffleAsync()
+        {
+            int m_threadCount = ThreadCount;
+
+            InitMap();
+
+            //Shuffle to make image fade in
+            IEnumerable<(int, int)> pixels = Shuffle(out int total);
+
+            int page = total / m_threadCount;
+            int jMin = 0;
+            List<Task> tasks = new();
+
+            m_tokenSource = new CancellationTokenSource();
+            AutoResetEvent[] events = new AutoResetEvent[m_threadCount];
+
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
+            int pageStart = 0;
+            for (int i = 0; i < m_threadCount; ++i)
+            {
+                IEnumerable<(int, int)> piece = new List<(int, int)>(pixels.Skip(pageStart).Take(page));
+                pageStart += page;
+
+                int key = i + 1;
+
+                Progress<double> progress = new(p => ViewModel.SetProgress(key, p));
+                AutoResetEvent autoEvent = new(false);
+                events[i] = autoEvent;
+
+                Task task = new(() => { GenerateWithShuffle(piece, progress, autoEvent); }, m_tokenSource.Token);
+
+                tasks.Add(task);
+                task.Start();
+
+                ViewModel.AddThreadProgress(key);
+            }
+
+            CancellationTokenSource watcherSource = new();
+            if (IsLive)
+            {
+                Task watcher = new(() =>
+                {
+                    while (true)
+                    {
+                        watcherSource.Token.ThrowIfCancellationRequested();
+
                         if (WaitHandle.WaitAny(events, 100) > -1)
                         {
                             ViewModel.StepCompleted();
@@ -186,52 +226,88 @@ namespace Pyanulis.RayTracing.Model
         #endregion
 
         #region Private methods
-        
+
         private void Generate(int jMin, int jMax, IProgress<double> progress, AutoResetEvent autoResetEvent)
         {
-            Random random = new Random();
+            Random random = new();
 
-            List<int> vert = new List<int>();
-            List<int> hor = new List<int>();
-            for (int j = jMin; j <= jMax; ++j)
-            {
-                vert.Add(j);
-            }
-            for (int i = 0; i < m_imgWidth; ++i)
-            {
-                hor.Add(i);
-            }
-
-            double total = vert.Count;
-
+            //Shuffle to make image fade in
+            IEnumerable<(int, int)> pixels = Shuffle(jMin, jMax, out int total);
+            double dTotal = total * 1.0;
             int step = 1;
-            foreach (int j in vert.OrderBy(x => random.Next()))
+            foreach ((int, int) pixel in pixels)
             {
-                foreach (int i in hor.OrderBy(x => random.Next()))
+                int j = pixel.Item1;
+                int i = pixel.Item2;
+
+                RayColor pixelColor = new(0, 0, 0, SamplesRate);
+                for (int s = 0; s < SamplesRate; ++s)
                 {
-                    RayColor pixelColor = new RayColor(0, 0, 0, SamplesRate);
-                    for (int s = 0; s < SamplesRate; ++s)
+                    m_tokenSource.Token.ThrowIfCancellationRequested();
+
+                    // x and y are normalized to be <=1 and become a coefficient of a basis vector
+                    double x = ((i * 1.0) + random.NextDouble()) / (m_imgWidth - 1);
+                    double y = ((j * 1.0) + random.NextDouble()) / (ImageHeight - 1);
+                    Ray r = m_camera.GetRay(x, y);
+                    pixelColor += GetRayColor(r, m_world, ColorDepth);
+                }
+
+                // need to invert j since image starts at the bottom
+                int jInverted = ImageHeight - 1 - j;
+
+                m_rayColorsAsync[jInverted, i] = pixelColor;
+
+                if (step % m_imgWidth == 0)
+                {
+                    progress.Report(step / dTotal);
+
+                    if (IsLive)
                     {
-                        m_tokenSource.Token.ThrowIfCancellationRequested();
-
-                        // x and y are normalized to be <=1 and become a coefficient of a basis vector
-                        double x = ((i * 1.0) + random.NextDouble()) / (m_imgWidth - 1);
-                        double y = ((j * 1.0) + random.NextDouble()) / (ImageHeight - 1);
-                        Ray r = m_camera.GetRay(x, y);
-                        pixelColor += GetRayColor(r, m_world, ColorDepth);
+                        autoResetEvent.Set();
                     }
-
-                    // need to invert j since image starts at the bottom
-                    int jInverted = ImageHeight - 1 - j;
-
-                    m_rayColorsAsync[jInverted, i] = pixelColor;
                 }
-                progress.Report(step++ / total);
+                step++;
+            }
+        }
 
-                if (IsLive)
+        private void GenerateWithShuffle(IEnumerable<(int, int)> page, IProgress<double> progress, AutoResetEvent autoResetEvent)
+        {
+            Random random = new();
+
+            double dTotal = page.Count() * 1.0;
+            int step = 1;
+            foreach ((int, int) pixel in page)
+            {
+                int j = pixel.Item1;
+                int i = pixel.Item2;
+
+                RayColor pixelColor = new(0, 0, 0, SamplesRate);
+                for (int s = 0; s < SamplesRate; ++s)
                 {
-                    autoResetEvent.Set();
+                    m_tokenSource.Token.ThrowIfCancellationRequested();
+
+                    // x and y are normalized to be <=1 and become a coefficient of a basis vector
+                    double x = ((i * 1.0) + random.NextDouble()) / (m_imgWidth - 1);
+                    double y = ((j * 1.0) + random.NextDouble()) / (ImageHeight - 1);
+                    Ray r = m_camera.GetRay(x, y);
+                    pixelColor += GetRayColor(r, m_world, ColorDepth);
                 }
+
+                // need to invert j since image starts at the bottom
+                int jInverted = ImageHeight - 1 - j;
+
+                m_rayColorsAsync[jInverted, i] = pixelColor;
+
+                if (step % m_imgWidth == 0)
+                {
+                    progress.Report(step / dTotal);
+
+                    if (IsLive)
+                    {
+                        autoResetEvent.Set();
+                    }
+                }
+                step++;
             }
         }
 
@@ -277,7 +353,7 @@ namespace Pyanulis.RayTracing.Model
 
         private ObstacleSet CreateWorld()
         {
-            ObstacleSet world = new ObstacleSet();
+            ObstacleSet world = new();
 
             Material ground_material = new Lambertian(new RayColor(0.5, 0.5, 0.5));
             world.Add(new Sphere(new Vec3(0, -1000, 0), 1000, ground_material));
@@ -287,7 +363,7 @@ namespace Pyanulis.RayTracing.Model
                 for (int b = -11; b < 11; b++)
                 {
                     double choose_mat = Vec3.RandomDouble();
-                    Vec3 center = new Vec3(a + 0.9 * Vec3.RandomDouble(), 0.2, b + 0.9 * Vec3.RandomDouble());
+                    Vec3 center = new(a + 0.9 * Vec3.RandomDouble(), 0.2, b + 0.9 * Vec3.RandomDouble());
 
                     if ((center - new Vec3(4, 0.2, 0)).Length > 0.9)
                     {
@@ -296,14 +372,14 @@ namespace Pyanulis.RayTracing.Model
                         if (choose_mat < 0.8)
                         {
                             // diffuse
-                            RayColor albedo = new RayColor(Vec3.Random() * Vec3.Random());
+                            RayColor albedo = new(Vec3.Random() * Vec3.Random());
                             sphere_material = new Lambertian(albedo);
                             world.Add(new Sphere(center, 0.2, sphere_material));
                         }
                         else if (choose_mat < 0.95)
                         {
                             // metal
-                            RayColor albedo = new RayColor(Vec3.Random(0.5, 1));
+                            RayColor albedo = new(Vec3.Random(0.5, 1));
                             double fuzz = Vec3.RandomDouble(0, 0.5);
                             sphere_material = new Metal(albedo, fuzz);
                             world.Add(new Sphere(center, 0.2, sphere_material));
@@ -328,6 +404,34 @@ namespace Pyanulis.RayTracing.Model
             world.Add(new Sphere(new Vec3(4, 1, 0), 1.0, material3));
 
             return world;
+        }
+
+        private IEnumerable<(int, int)> Shuffle(out int total)
+        {
+            return Shuffle(0, m_imgHeight - 1, out total);
+        }
+
+        private IEnumerable<(int, int)> Shuffle(int jMin, int jMax, out int total)
+    {
+            Random random = new();
+
+            List<int> vert = new();
+            List<int> hor = new();
+            for (int j = jMin; j <= jMax; ++j)
+            {
+                vert.Add(j);
+            }
+            for (int i = 0; i < m_imgWidth; ++i)
+            {
+                hor.Add(i);
+            }
+
+            total = vert.Count * hor.Count;
+
+            var coords = vert.SelectMany(j => hor.Select<int, (int, int)>(i => new ( j, i )));
+            // OrderBy must execute only once to make distinct pieces
+            List<(int, int)> list = new(coords.OrderBy(x => random.Next()));
+            return list;
         }
 
         #endregion

@@ -14,6 +14,10 @@ namespace Pyanulis.RayTracing.Model
         {
         }
 
+        public RayColor(int r, int g, int b) : base(cb(r), cb(g), cb(b))
+        {
+        }
+
         public RayColor(double x, double y, double z, int samples) : base(x, y, z)
         {
             m_samples = samples;
@@ -53,5 +57,9 @@ namespace Pyanulis.RayTracing.Model
             double scale = 1.0 / m_samples;
             return (byte)Math.Round(255 * Math.Clamp(Math.Sqrt(factor * scale), 0.0, 0.999), MidpointRounding.AwayFromZero);
         }
+
+        private static double ConvertBack(int rgb) => rgb * 1.0 / 255;
+
+        private static double cb(int rgb) => ConvertBack(rgb);
     }
 }
