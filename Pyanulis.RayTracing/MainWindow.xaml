@@ -6,13 +6,13 @@
         xmlns:view="clr-namespace:Pyanulis.RayTracing.View"
         xmlns:local="clr-namespace:Pyanulis.RayTracing"
         mc:Ignorable="d"
-        Title="WPF.RayTracing" Height="700" Width="1200"
+        Title="WPF.RayTracing" Height="700" Width="1300"
         FontFamily="SegoeUI"
         FontSize="14px">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>

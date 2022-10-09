@@ -6,6 +6,8 @@ namespace Pyanulis.RayTracing.Model
     {
         private readonly List<Obstacle> m_obstacles = new List<Obstacle>();
 
+        public string Name { get; set; }
+
         public void Clear()
         {
             m_obstacles.Clear();

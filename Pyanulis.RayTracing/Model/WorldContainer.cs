@@ -80,7 +80,7 @@ namespace Pyanulis.RayTracing.Model
 
         private static ObstacleSet FillGlassWithMoons()
         {
-            ObstacleSet world = new();
+            ObstacleSet world = new() { Name = nameof(GlassWithMoons) };
 
             Material materialGlass = new Dielectric(10);
 
@@ -101,7 +101,7 @@ namespace Pyanulis.RayTracing.Model
 
         private static ObstacleSet FillSphereInSphere()
         {
-            ObstacleSet world = new();
+            ObstacleSet world = new() { Name = nameof(SphereInSphere) };
 
             Material materialOutter = new Dielectric(10);
             Material materialInner = new Metal(new RayColor(255, 255, 153), 0.7);
@@ -114,7 +114,7 @@ namespace Pyanulis.RayTracing.Model
 
         private static ObstacleSet FillSimpleThree()
         {
-            ObstacleSet world = new();
+            ObstacleSet world = new() { Name = nameof(SimpleThree) };
 
             Material material_center = new Lambertian(new RayColor(0.1, 0.2, 0.5));
             Material material_left = new Dielectric(1.5);
@@ -129,7 +129,7 @@ namespace Pyanulis.RayTracing.Model
 
         private static ObstacleSet FillSimpleSix()
         {
-            ObstacleSet world = new();
+            ObstacleSet world = new() { Name = nameof(SimpleSix) };
 
             Material material_center = new Lambertian(new RayColor(0.1, 0.2, 0.5));
             Material material_left = new Dielectric(1.5);
@@ -151,7 +151,7 @@ namespace Pyanulis.RayTracing.Model
 
         private static ObstacleSet FillHeavyRich()
         {
-            ObstacleSet world = new();
+            ObstacleSet world = new() { Name = nameof(HeavyRich) };
 
             Material ground_material = new Lambertian(new RayColor(0.5, 0.5, 0.5));
             world.Add(new Sphere(new Vec3(0, -1000, 0), 1000, ground_material));

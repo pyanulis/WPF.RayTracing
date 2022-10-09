@@ -18,5 +18,7 @@ namespace Pyanulis.RayTracing.Model
         int ImageWidth { get; }
         int ThreadCount { get; set; }
         bool IsLive { get; set; }
+
+        ObstacleSet World { get; set; }
     }
 }

@@ -19,7 +19,7 @@ namespace Pyanulis.RayTracing.Model
 
         #region Private fields
 
-        private readonly ObstacleSet m_world = new();
+        //private readonly ObstacleSet m_world = new();
         private readonly Camera m_camera;
         private CancellationTokenSource m_tokenSource = new();
 
@@ -53,6 +53,8 @@ namespace Pyanulis.RayTracing.Model
 
         public int ImageWidth => m_imgWidth;
 
+        public ObstacleSet World { get; set; }
+
         #endregion
 
         #region Constructor
@@ -61,9 +63,11 @@ namespace Pyanulis.RayTracing.Model
         {
             InitMap();
 
-            m_world = WorldContainer.SimpleThree;
+            //m_world = WorldContainer.GlassWithMoons;
 
             m_camera = new Camera(
+                //lookfrom: new Vec3(13, 2, 3), //<=HeavyRich
+                //lookat: new Vec3(0, 0, 0),
                 lookfrom: new Vec3(0, 4, 7),
                 lookat: new Vec3(0, 1, 0),
                 vup: new Vec3(0, 1, 0),
@@ -249,7 +253,7 @@ namespace Pyanulis.RayTracing.Model
                     double x = ((i * 1.0) + random.NextDouble()) / (m_imgWidth - 1);
                     double y = ((j * 1.0) + random.NextDouble()) / (ImageHeight - 1);
                     Ray r = m_camera.GetRay(x, y);
-                    pixelColor += GetRayColor(r, m_world, ColorDepth);
+                    pixelColor += GetRayColor(r, World, ColorDepth);
                 }
 
                 // need to invert j since image starts at the bottom
@@ -290,7 +294,7 @@ namespace Pyanulis.RayTracing.Model
                     double x = ((i * 1.0) + random.NextDouble()) / (m_imgWidth - 1);
                     double y = ((j * 1.0) + random.NextDouble()) / (ImageHeight - 1);
                     Ray r = m_camera.GetRay(x, y);
-                    pixelColor += GetRayColor(r, m_world, ColorDepth);
+                    pixelColor += GetRayColor(r, World, ColorDepth);
                 }
 
                 // need to invert j since image starts at the bottom

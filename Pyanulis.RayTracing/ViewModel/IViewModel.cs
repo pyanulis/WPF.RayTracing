@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Pyanulis.RayTracing.ViewModel
 {
@@ -10,6 +11,8 @@ namespace Pyanulis.RayTracing.ViewModel
         int ThreadCount { get; set; }
         bool IsLive { get; set; }
         string LastDuration { get; set; }
+        string SelectedWorld { get; set; }
+        IEnumerable<string> Worlds { get; }
 
         void Generate();
         void Cancel();

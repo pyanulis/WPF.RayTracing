@@ -1,6 +1,7 @@
 ﻿using Pyanulis.RayTracing.Model;
 using Pyanulis.RayTracing.View;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -59,6 +60,17 @@ namespace Pyanulis.RayTracing.ViewModel
             }
         }
 
+        public string SelectedWorld
+        {
+            get => Model?.World?.Name;
+            set
+            {
+                Model.World = WorldPicker.PickWorld(value);
+            }
+        }
+
+        public IEnumerable<string> Worlds => WorldPicker.Worlds;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion
@@ -72,6 +84,7 @@ namespace Pyanulis.RayTracing.ViewModel
             Toolbar = toolbar;
 
             Model.ViewModel = this;
+            SelectedWorld = WorldPicker.Default;
         }
 
         #endregion
@@ -163,5 +176,31 @@ namespace Pyanulis.RayTracing.ViewModel
         } 
 
         #endregion
+
+        private static class WorldPicker
+        {
+            private static List<string> m_worlds = new()
+            {
+                nameof(WorldContainer.SimpleThree),
+                nameof(WorldContainer.SimpleSix),
+                nameof(WorldContainer.SphereInSphere),
+                nameof(WorldContainer.GlassWithMoons),
+                nameof(WorldContainer.HeavyRich),
+            };
+
+            public static IEnumerable<string> Worlds => m_worlds;
+
+            public static string Default => nameof(WorldContainer.SimpleThree);
+
+            public static ObstacleSet PickWorld(string name) => name switch
+            {
+                nameof(WorldContainer.SimpleThree) => WorldContainer.SimpleThree,
+                nameof(WorldContainer.SimpleSix) => WorldContainer.SimpleSix,
+                nameof(WorldContainer.HeavyRich) => WorldContainer.HeavyRich,
+                nameof(WorldContainer.SphereInSphere    ) => WorldContainer.SphereInSphere,
+                nameof(WorldContainer.GlassWithMoons) => WorldContainer.GlassWithMoons,
+                _ => throw new ArgumentException($"There is no world set with name {name}."),
+            };
+        }
     }
 }

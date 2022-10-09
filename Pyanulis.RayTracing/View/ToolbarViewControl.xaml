@@ -6,10 +6,10 @@
              xmlns:local="clr-namespace:Pyanulis.RayTracing.View"
              xmlns:Controls="clr-namespace:Pyanulis.RayTracing.Controls" x:Class="Pyanulis.RayTracing.View.ToolbarViewControl"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="200">
+             d:DesignHeight="450" d:DesignWidth="300">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="200"/>
+            <RowDefinition Height="240"/>
             <RowDefinition Height="80"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -22,10 +22,11 @@
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="1.5*"/>
             </Grid.ColumnDefinitions>
             <Label
                 Grid.Row="0"
@@ -90,6 +91,19 @@
                 IsChecked="{Binding Path=IsLive}"
                 Content="Live"
                 VerticalContentAlignment="Center"/>
+            <Label
+                Grid.Row="5"
+                Grid.Column="0"
+                VerticalContentAlignment="Center"
+                >World:</Label>
+            <ComboBox
+                x:Name="cbWorld"
+                Grid.Row="5"
+                Grid.Column="1"
+                Margin="4"
+                ItemsSource="{Binding Path=Worlds}"
+                SelectedItem="{Binding Path=SelectedWorld}"
+                />
         </Grid>
         <WrapPanel 
             x:Name="pnlWrap"
