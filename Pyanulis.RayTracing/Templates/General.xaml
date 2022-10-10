@@ -1,5 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:templates="clr-namespace:Pyanulis.RayTracing.Templates">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+                    xmlns:converters="clr-namespace:Pyanulis.RayTracing.Converters">
 
     <!--https://www.codeproject.com/Articles/85896/WPF-Customize-your-Application-with-Styles-and-C-2-->
     <SolidColorBrush x:Key="BaseBackColor" Color="#99000000"></SolidColorBrush>
@@ -21,7 +22,7 @@
 
     <CornerRadius x:Key="ProgressCorner">7</CornerRadius>
 
-    <templates:ProgressForeColorConverter x:Key="ColorConverter"/>
+    <converters:ProgressForeColorConverter x:Key="ColorConverter"/>
 
     <ControlTemplate x:Key="ThreadProgressBar" TargetType="{x:Type ProgressBar}">
         <Grid MinHeight="14" MinWidth="20">

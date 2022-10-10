@@ -14,6 +14,8 @@ namespace Pyanulis.RayTracing.ViewModel
         string SelectedWorld { get; set; }
         IEnumerable<string> Worlds { get; }
 
+        ImageStrategy Strategy { get; set; }
+
         void Generate();
         void Cancel();
         void GenerationCompleted();

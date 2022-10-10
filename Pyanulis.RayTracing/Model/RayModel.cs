@@ -1,4 +1,5 @@
 ﻿using Pyanulis.RayTracing.Model.Materials;
+using Pyanulis.RayTracing.Model.Strategies;
 using Pyanulis.RayTracing.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,8 @@ namespace Pyanulis.RayTracing.Model
         private int m_imgWidth;
         private int m_imgHeight = 200;
         private RayColor[,] m_rayColorsAsync;
+
+        private GenerateStrategyAbstract m_strategy = new FlatGenerateStrategy();
 
         #endregion
 
@@ -81,37 +84,39 @@ namespace Pyanulis.RayTracing.Model
 
         #region Public methods
 
+        public void SetStrategy(GenerateStrategyAbstract generateStrategy)
+        {
+            m_strategy = generateStrategy;
+        }
+
         public async void GenerateAsync()
         {
-            int m_threadCount = ThreadCount;
-
             InitMap();
 
-            int range = ImageHeight / m_threadCount;
-            int jMin = 0;
             List<Task> tasks = new();
-
+            
             m_tokenSource = new CancellationTokenSource();
-            AutoResetEvent[] events = new AutoResetEvent[m_threadCount];
+            AutoResetEvent[] events = new AutoResetEvent[ThreadCount];
+            m_strategy.Init(ThreadCount, ImageHeight, ImageWidth);
 
             Stopwatch stopwatch = new();
             stopwatch.Start();
-            for (int i = 0; i < m_threadCount; ++i)
+
+            for (int i = 0; i < ThreadCount; ++i)
             {
-                int jMax = i == m_threadCount - 1 ? ImageHeight - 1 : jMin + range - 1;
-                int min = jMin;
                 int key = i + 1;
 
                 Progress<double> progress = new(p => ViewModel.SetProgress(key, p));
                 AutoResetEvent autoEvent = new(false);
                 events[i] = autoEvent;
 
-                Task task = new(() => { Generate(min, jMax, progress, autoEvent); }, m_tokenSource.Token);
+                //Shuffle to make image fade in
+                IEnumerable<(int, int)> page = m_strategy.GetNextPage();
+                Task task = new(() => { Generate(page, progress, autoEvent); }, m_tokenSource.Token);
 
+                ViewModel.AddThreadProgress(key);
                 tasks.Add(task);
                 task.Start();
-                jMin += range;
-                ViewModel.AddThreadProgress(key);
             }
 
             CancellationTokenSource watcherSource = new();
@@ -158,7 +163,7 @@ namespace Pyanulis.RayTracing.Model
             //Shuffle to make image fade in
             IEnumerable<(int, int)> pixels = Shuffle(out int total);
 
-            int page = total / m_threadCount;
+            int pageSize = total / m_threadCount;
             int jMin = 0;
             List<Task> tasks = new();
 
@@ -170,8 +175,8 @@ namespace Pyanulis.RayTracing.Model
             int pageStart = 0;
             for (int i = 0; i < m_threadCount; ++i)
             {
-                IEnumerable<(int, int)> piece = new List<(int, int)>(pixels.Skip(pageStart).Take(page));
-                pageStart += page;
+                IEnumerable<(int, int)> page = new List<(int, int)>(pixels.Skip(pageStart).Take(pageSize));
+                pageStart += pageSize;
 
                 int key = i + 1;
 
@@ -179,7 +184,7 @@ namespace Pyanulis.RayTracing.Model
                 AutoResetEvent autoEvent = new(false);
                 events[i] = autoEvent;
 
-                Task task = new(() => { GenerateWithShuffle(piece, progress, autoEvent); }, m_tokenSource.Token);
+                Task task = new(() => { Generate(page, progress, autoEvent); }, m_tokenSource.Token);
 
                 tasks.Add(task);
                 task.Start();
@@ -231,50 +236,7 @@ namespace Pyanulis.RayTracing.Model
 
         #region Private methods
 
-        private void Generate(int jMin, int jMax, IProgress<double> progress, AutoResetEvent autoResetEvent)
-        {
-            Random random = new();
-
-            //Shuffle to make image fade in
-            IEnumerable<(int, int)> pixels = Shuffle(jMin, jMax, out int total);
-            double dTotal = total * 1.0;
-            int step = 1;
-            foreach ((int, int) pixel in pixels)
-            {
-                int j = pixel.Item1;
-                int i = pixel.Item2;
-
-                RayColor pixelColor = new(0, 0, 0, SamplesRate);
-                for (int s = 0; s < SamplesRate; ++s)
-                {
-                    m_tokenSource.Token.ThrowIfCancellationRequested();
-
-                    // x and y are normalized to be <=1 and become a coefficient of a basis vector
-                    double x = ((i * 1.0) + random.NextDouble()) / (m_imgWidth - 1);
-                    double y = ((j * 1.0) + random.NextDouble()) / (ImageHeight - 1);
-                    Ray r = m_camera.GetRay(x, y);
-                    pixelColor += GetRayColor(r, World, ColorDepth);
-                }
-
-                // need to invert j since image starts at the bottom
-                int jInverted = ImageHeight - 1 - j;
-
-                m_rayColorsAsync[jInverted, i] = pixelColor;
-
-                if (step % m_imgWidth == 0)
-                {
-                    progress.Report(step / dTotal);
-
-                    if (IsLive)
-                    {
-                        autoResetEvent.Set();
-                    }
-                }
-                step++;
-            }
-        }
-
-        private void GenerateWithShuffle(IEnumerable<(int, int)> page, IProgress<double> progress, AutoResetEvent autoResetEvent)
+        private void Generate(IEnumerable<(int, int)> page, IProgress<double> progress, AutoResetEvent autoResetEvent)
         {
             Random random = new();
 

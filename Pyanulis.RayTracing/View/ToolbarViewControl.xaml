@@ -1,15 +1,20 @@
 ﻿<UserControl
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:Pyanulis.RayTracing.View"
-             xmlns:Controls="clr-namespace:Pyanulis.RayTracing.Controls" x:Class="Pyanulis.RayTracing.View.ToolbarViewControl"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="300">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:Pyanulis.RayTracing.View"
+    xmlns:Controls="clr-namespace:Pyanulis.RayTracing.Controls" 
+    xmlns:Converters="clr-namespace:Pyanulis.RayTracing.Converters" 
+    x:Class="Pyanulis.RayTracing.View.ToolbarViewControl"
+    mc:Ignorable="d" 
+    d:DesignHeight="450" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Converters:ImageStrategyConverter x:Key="ImageStrategyConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="240"/>
+            <RowDefinition Height="280"/>
             <RowDefinition Height="80"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -17,6 +22,7 @@
             x:Name="gridSettings"
             Grid.Row="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
                 <RowDefinition Height="40"/>
@@ -103,7 +109,37 @@
                 Margin="4"
                 ItemsSource="{Binding Path=Worlds}"
                 SelectedItem="{Binding Path=SelectedWorld}"
+                VerticalContentAlignment="Center"
                 />
+            <Label
+                Grid.Row="6"
+                Grid.Column="0"
+                VerticalContentAlignment="Center"
+                >Processing load:</Label>
+            <WrapPanel
+                Grid.Row="6"
+                Grid.Column="1"
+                Grid.ColumnSpan="1"
+                Orientation="Horizontal"
+                VerticalAlignment="Stretch"
+                >
+                <RadioButton
+                    Margin="2"
+                    VerticalContentAlignment="Center"
+                    VerticalAlignment="Center"
+                    Content="Equal threads load"
+                    GroupName="ImageStrategy"
+                    IsChecked="{Binding Path=Strategy, Converter={StaticResource ImageStrategyConverter}, ConverterParameter=Flat}"
+                    />
+                <RadioButton
+                    Margin="2"
+                    VerticalContentAlignment="Center"
+                    VerticalAlignment="Center"
+                    Content="Sequential blocks load"
+                    GroupName="ImageStrategy"
+                    IsChecked="{Binding Path=Strategy, Converter={StaticResource ImageStrategyConverter}, ConverterParameter=ImageBlock}"
+                    />
+            </WrapPanel>
         </Grid>
         <WrapPanel 
             x:Name="pnlWrap"

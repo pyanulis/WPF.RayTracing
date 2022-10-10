@@ -1,4 +1,5 @@
-﻿using Pyanulis.RayTracing.ViewModel;
+﻿using Pyanulis.RayTracing.Model.Strategies;
+using Pyanulis.RayTracing.ViewModel;
 using System;
 
 namespace Pyanulis.RayTracing.Model
@@ -8,6 +9,8 @@ namespace Pyanulis.RayTracing.Model
         void GenerateAsync();
         void GenerateWithShuffleAsync();
         void Cancel();
+        void SetStrategy(GenerateStrategyAbstract generateStrategy);
+
         RayColor[,] ColorMap { get; }
         IViewModel ViewModel { get; set; }
         TimeSpan LastDuration { get; }

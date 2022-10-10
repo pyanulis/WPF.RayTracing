@@ -1,4 +1,5 @@
 ﻿using Pyanulis.RayTracing.Model;
+using Pyanulis.RayTracing.Model.Strategies;
 using Pyanulis.RayTracing.View;
 using System;
 using System.Collections.Generic;
@@ -71,6 +72,8 @@ namespace Pyanulis.RayTracing.ViewModel
 
         public IEnumerable<string> Worlds => WorldPicker.Worlds;
 
+        public ImageStrategy Strategy { get; set; } = ImageStrategy.Flat;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion
@@ -98,8 +101,8 @@ namespace Pyanulis.RayTracing.ViewModel
 
         public void Generate()
         {
-            Model.GenerateWithShuffleAsync();
-            //Model.GenerateAsync();
+            Model.SetStrategy(PickStrategy());
+            Model.GenerateAsync();
             Toolbar.GenerationStarted();
             Scene.GenerationStarted();
         }
@@ -173,7 +176,14 @@ namespace Pyanulis.RayTracing.ViewModel
             {
                 handler(this, new PropertyChangedEventArgs(name));
             }
-        } 
+        }
+
+        private GenerateStrategyAbstract PickStrategy() => Strategy switch
+        {
+            ImageStrategy.Flat => new FlatGenerateStrategy(),
+            ImageStrategy.ImageBlock => new ImageBlockGenerateStrategy(),
+            _ => throw new NotImplementedException($"Unsupported strategy {Strategy}.")
+        };
 
         #endregion
 

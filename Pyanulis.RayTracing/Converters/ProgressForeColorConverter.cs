@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace Pyanulis.RayTracing.Templates
+namespace Pyanulis.RayTracing.Converters
 {
     [ValueConversion(typeof(DateTime), typeof(String))]
     public class ProgressForeColorConverter : IValueConverter
